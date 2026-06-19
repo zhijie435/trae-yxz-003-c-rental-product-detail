@@ -66,6 +66,11 @@
       </div>
     </main>
 
+    <UserReviews
+      v-if="productCoreInfo.reviews && productCoreInfo.reviews.length > 0"
+      :reviews="productCoreInfo.reviews"
+    />
+
     <div v-if="notification.show" class="notification" :class="notification.type">
       {{ notification.message }}
     </div>
@@ -78,6 +83,7 @@ import MediaGallery from './components/MediaGallery.vue'
 import SpecificationSelector from './components/SpecificationSelector.vue'
 import ProductCoreInfo from './components/ProductCoreInfo.vue'
 import ServicePromise from './components/ServicePromise.vue'
+import UserReviews from './components/UserReviews.vue'
 import { useRentalSelection } from './composables/useRentalSelection'
 
 const productId = ref('product-001')
