@@ -90,6 +90,7 @@
 
 <script setup>
 import { ref, reactive, provide, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import MediaGallery from './components/MediaGallery.vue'
 import SpecificationSelector from './components/SpecificationSelector.vue'
 import ProductCoreInfo from './components/ProductCoreInfo.vue'
@@ -97,6 +98,8 @@ import ServicePromise from './components/ServicePromise.vue'
 import UserReviews from './components/UserReviews.vue'
 import BottomActionBar from './components/BottomActionBar.vue'
 import { useRentalSelection } from './composables/useRentalSelection'
+
+const router = useRouter()
 
 const productId = ref('product-001')
 
@@ -217,8 +220,36 @@ const handleRent = () => {
   }
 
   const summary = selectionSummary.value
-  const message = `您选择了：${summary.periodLabel}租期，${summary.colorName}，${summary.sizeName}，${summary.deliveryName}，应付总额¥${summary.totalAmount}`
-  showNotification(message, 'success')
+
+  const orderData = {
+    productId: productId.value,
+    rentalConfig: {
+      period: summary.period,
+      color: summary.color,
+      size: summary.size,
+      delivery: summary.delivery
+    },
+    pricing: {
+      monthlyPrice: summary.monthlyPrice,
+      deposit: summary.deposit,
+      deliveryFee: summary.deliveryFee,
+      subtotal: summary.rentalSubtotal,
+      total: summary.totalAmount
+    },
+    labels: {
+      periodLabel: summary.periodLabel,
+      colorName: summary.colorName,
+      sizeName: summary.sizeName,
+      deliveryName: summary.deliveryName
+    }
+  }
+
+  router.push({
+    path: '/order/confirm',
+    query: {
+      orderData: encodeURIComponent(JSON.stringify(orderData))
+    }
+  })
 }
 
 const handleCustomerService = () => {
