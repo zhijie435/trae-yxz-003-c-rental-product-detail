@@ -71,6 +71,17 @@
       :reviews="productCoreInfo.reviews"
     />
 
+    <BottomActionBar
+      :monthly-price="rentalSelection.monthlyPrice.value"
+      :total-amount="rentalSelection.totalAmount.value"
+      :cart-count="cartCount"
+      :unread-messages="unreadMessages"
+      @customer-service="handleCustomerService"
+      @favorite="handleFavorite"
+      @add-to-cart="handleAddToCart"
+      @rent="handleRent"
+    />
+
     <div v-if="notification.show" class="notification" :class="notification.type">
       {{ notification.message }}
     </div>
@@ -84,6 +95,7 @@ import SpecificationSelector from './components/SpecificationSelector.vue'
 import ProductCoreInfo from './components/ProductCoreInfo.vue'
 import ServicePromise from './components/ServicePromise.vue'
 import UserReviews from './components/UserReviews.vue'
+import BottomActionBar from './components/BottomActionBar.vue'
 import { useRentalSelection } from './composables/useRentalSelection'
 
 const productId = ref('product-001')
@@ -160,6 +172,10 @@ const notification = reactive({
   type: 'success'
 })
 
+const cartCount = ref(0)
+const unreadMessages = ref(2)
+const isFavorited = ref(false)
+
 const rentalSelection = useRentalSelection({
   basePrice: 199,
   baseDeposit: 800
@@ -203,6 +219,20 @@ const handleRent = () => {
   const summary = selectionSummary.value
   const message = `您选择了：${summary.periodLabel}租期，${summary.colorName}，${summary.sizeName}，${summary.deliveryName}，应付总额¥${summary.totalAmount}`
   showNotification(message, 'success')
+}
+
+const handleCustomerService = () => {
+  showNotification('正在连接在线客服...', 'success')
+}
+
+const handleFavorite = (favorited) => {
+  isFavorited.value = favorited
+  showNotification(favorited ? '已添加到收藏' : '已取消收藏', 'success')
+}
+
+const handleAddToCart = () => {
+  cartCount.value++
+  showNotification('已加入购物车', 'success')
 }
 </script>
 
@@ -394,7 +424,7 @@ const handleRent = () => {
 
 .notification {
   position: fixed;
-  bottom: 24px;
+  bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
   padding: 14px 28px;

@@ -38,11 +38,11 @@ body {
 .app-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: 40px 24px 120px;
 }
 
 @media (max-width: 768px) {
   .app-container {
-    padding: 20px 16px;
+    padding: 20px 16px 100px;
   }
 }
