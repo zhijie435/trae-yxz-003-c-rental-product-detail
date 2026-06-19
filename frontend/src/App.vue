@@ -100,7 +100,7 @@ const notification = reactive({
   type: 'success'
 })
 
-const productSelection = reactive({
+const productSelection = ref({
   period: 6,
   color: 'white',
   colorName: '米白色',
@@ -131,11 +131,11 @@ const handleMediaError = ({ message }) => {
 }
 
 const handleSelectionUpdate = (selection) => {
-  Object.assign(productSelection, selection)
+  Object.assign(productSelection.value, selection)
 }
 
 const handleRent = () => {
-  const message = `您选择了：${productSelection.period}个月租期，${productSelection.colorName}色，${productSelection.size === 'small' ? '小款' : productSelection.size === 'medium' ? '中款' : '大款'}，应付总额¥${productSelection.totalAmount}`
+  const message = `您选择了：${productSelection.value.period}个月租期，${productSelection.value.colorName}色，${productSelection.value.size === 'small' ? '小款' : productSelection.value.size === 'medium' ? '中款' : '大款'}，应付总额¥${productSelection.value.totalAmount}`
   showNotification(message, 'success')
 }
 </script>
