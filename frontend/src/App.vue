@@ -26,40 +26,33 @@
             
             <div class="price-section">
               <div class="rental-price">
-                <span class="price-label">租金</span>
-                <span class="price-value">¥199</span>
-                <span class="price-unit">/月</span>
+                <span class="price-label">月租</span>
+                <div class="price-display">
+                  <span class="price-value">¥{{ productSelection.monthlyPrice }}</span>
+                  <span class="price-unit">/月起</span>
+                </div>
               </div>
               <div class="deposit">
                 <span class="deposit-label">押金</span>
-                <span class="deposit-value">¥800</span>
+                <span class="deposit-value">¥{{ productSelection.deposit }}</span>
+              </div>
+              <div class="total-display">
+                <span class="total-label">应付总额</span>
+                <span class="total-value">¥{{ productSelection.totalAmount }}</span>
               </div>
             </div>
 
-            <div class="specs-section">
-              <h3 class="specs-title">商品规格</h3>
-              <div class="specs-grid">
-                <div class="spec-item">
-                  <span class="spec-label">尺寸</span>
-                  <span class="spec-value">200×90×85cm</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-label">材质</span>
-                  <span class="spec-value">棉麻/实木</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-label">颜色</span>
-                  <span class="spec-value">米白色</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-label">租期</span>
-                  <span class="spec-value">3-12个月</span>
-                </div>
-              </div>
-            </div>
+            <SpecificationSelector
+              :base-price="199"
+              :base-deposit="800"
+              @update:selection="handleSelectionUpdate"
+            />
 
             <div class="action-buttons">
-              <button class="btn-primary">立即租赁</button>
+              <button class="btn-primary" @click="handleRent">
+                立即租赁
+                <span class="btn-price">¥{{ productSelection.totalAmount }}</span>
+              </button>
               <button class="btn-secondary">加入收藏</button>
             </div>
           </div>
@@ -74,8 +67,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import MediaGallery from './components/MediaGallery.vue'
+import SpecificationSelector from './components/SpecificationSelector.vue'
 
 const productId = ref('product-001')
 
@@ -106,6 +100,19 @@ const notification = reactive({
   type: 'success'
 })
 
+const productSelection = reactive({
+  period: 6,
+  color: 'white',
+  colorName: '米白色',
+  size: 'medium',
+  delivery: 'delivery',
+  monthlyPrice: 189,
+  deposit: 800,
+  deliveryFee: 0,
+  totalAmount: 1934,
+  rentalSubtotal: 1134
+})
+
 const showNotification = (message, type = 'success') => {
   notification.message = message
   notification.type = type
@@ -121,6 +128,15 @@ const handleMediaUploaded = ({ media }) => {
 
 const handleMediaError = ({ message }) => {
   showNotification(message, 'error')
+}
+
+const handleSelectionUpdate = (selection) => {
+  Object.assign(productSelection, selection)
+}
+
+const handleRent = () => {
+  const message = `您选择了：${productSelection.period}个月租期，${productSelection.colorName}色，${productSelection.size === 'small' ? '小款' : productSelection.size === 'medium' ? '中款' : '大款'}，应付总额¥${productSelection.totalAmount}`
+  showNotification(message, 'success')
 }
 </script>
 
@@ -192,12 +208,18 @@ const handleMediaError = ({ message }) => {
 }
 
 .price-section {
-  display: flex;
-  gap: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
   padding: 24px;
   background: linear-gradient(135deg, #faf9f6 0%, #f5f4f0 100%);
   border-radius: var(--radius-md);
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+}
+
+.price-display {
+  display: flex;
+  flex-direction: column;
 }
 
 .rental-price {
@@ -206,29 +228,43 @@ const handleMediaError = ({ message }) => {
 }
 
 .price-label,
-.deposit-label {
-  font-size: 13px;
+.deposit-label,
+.total-label {
+  font-size: 12px;
   color: var(--color-text-muted);
   margin-bottom: 4px;
 }
 
 .price-value {
-  font-size: 36px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--color-primary);
   font-family: var(--font-display);
 }
 
 .price-unit {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--color-text-muted);
-  margin-left: 2px;
+  margin-top: 2px;
 }
 
 .deposit-value {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text);
+}
+
+.total-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.total-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-accent);
+  font-family: var(--font-display);
 }
 
 .specs-section {
@@ -268,26 +304,37 @@ const handleMediaError = ({ message }) => {
 }
 
 .action-buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
   gap: 16px;
+  margin-top: 24px;
 }
 
 .btn-primary {
-  flex: 1;
-  padding: 16px 32px;
+  padding: 18px 32px;
   background: linear-gradient(135deg, var(--color-primary) 0%, #333 100%);
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(26, 26, 26, 0.3);
+}
+
+.btn-price {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-display);
 }
 
 .btn-secondary {
@@ -351,16 +398,16 @@ const handleMediaError = ({ message }) => {
   }
 
   .price-section {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: 16px;
   }
 
-  .specs-grid {
-    grid-template-columns: 1fr;
+  .total-display {
+    align-items: flex-start;
   }
 
   .action-buttons {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 }
 </style>
