@@ -94,7 +94,7 @@
       <div class="breakdown-list">
         <div class="breakdown-item">
           <span class="item-label">月租费</span>
-          <span class="item-value">¥{{ currentPeriodPrice }} × {{ selectedPeriod }}个月</span>
+          <span class="item-value">¥{{ monthlyPrice }} × {{ selection.period }}个月</span>
         </div>
         <div class="breakdown-item">
           <span class="item-label">租金小计</span>
@@ -102,11 +102,11 @@
         </div>
         <div class="breakdown-item">
           <span class="item-label">押金</span>
-          <span class="item-value">¥{{ calculatedDeposit }}</span>
+          <span class="item-value">¥{{ deposit }}</span>
         </div>
         <div class="breakdown-item">
           <span class="item-label">配送费</span>
-          <span class="item-value">{{ currentDeliveryFee === 0 ? '免费' : '¥' + currentDeliveryFee }}</span>
+          <span class="item-value">{{ deliveryFee === 0 ? '免费' : '¥' + deliveryFee }}</span>
         </div>
         <div class="breakdown-divider"></div>
         <div class="breakdown-item total">
@@ -115,7 +115,7 @@
         </div>
         <div class="breakdown-item deposit-note">
           <span class="item-label">押金说明</span>
-          <span class="item-value note">租期结束退款 ¥{{ calculatedDeposit }}</span>
+          <span class="item-value note">租期结束退款 ¥{{ deposit }}</span>
         </div>
       </div>
     </div>
@@ -123,7 +123,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { computed, inject, onMounted, watch } from 'vue'
+import { useRentalSelection, RENTAL_PERIODS, COLORS, SIZES, DELIVERY_METHODS } from '../composables/useRentalSelection'
 
 const props = defineProps({
   basePrice: {
@@ -136,129 +137,87 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:selection'])
+const emit = defineEmits(['update:selection', 'validation-change'])
 
-const rentalPeriods = [
-  { months: 3, price: 199, discount: 0 },
-  { months: 6, price: 189, discount: 5 },
-  { months: 12, price: 169, discount: 15 }
-]
+const injectedSelection = inject('rentalSelection', null)
 
-const colors = [
-  { value: 'white', name: '米白色', hex: '#f5f5dc' },
-  { value: 'gray', name: '高级灰', hex: '#808080' },
-  { value: 'brown', name: '咖啡棕', hex: '#8b4513' },
-  { value: 'blue', name: '深海蓝', hex: '#4682b4' }
-]
-
-const sizes = [
-  { value: 'small', name: '小款 180×80cm', priceChange: -100 },
-  { value: 'medium', name: '中款 200×90cm', priceChange: 0 },
-  { value: 'large', name: '大款 220×100cm', priceChange: 150 }
-]
-
-const deliveryMethods = [
-  {
-    value: 'pickup',
-    name: '门店自提',
-    description: '到指定门店取货',
-    fee: 0,
-    icon: '🏪'
-  },
-  {
-    value: 'delivery',
-    name: '送货上门',
-    description: '免费送货到楼下',
-    fee: 0,
-    icon: '🚚'
-  },
-  {
-    value: 'install',
-    name: '安装配送',
-    description: '送货+专业安装',
-    fee: 150,
-    icon: '🔧'
-  }
-]
-
-const selectedPeriod = ref(6)
-const selectedColor = ref('white')
-const selectedSize = ref('medium')
-const selectedDelivery = ref('delivery')
-
-const currentPeriodPrice = computed(() => {
-  const period = rentalPeriods.find(p => p.months === selectedPeriod.value)
-  return period ? period.price : props.basePrice
+const rentalSelection = injectedSelection || useRentalSelection({
+  basePrice: props.basePrice,
+  baseDeposit: props.baseDeposit
 })
 
-const sizePriceMultiplier = computed(() => {
-  const size = sizes.find(s => s.value === selectedSize.value)
-  return size ? size.priceChange : 0
+const {
+  selection,
+  setPeriod,
+  setColor,
+  setSize,
+  setDelivery,
+  monthlyPrice,
+  deposit,
+  rentalSubtotal,
+  deliveryFee,
+  totalAmount
+} = rentalSelection
+
+const rentalPeriods = RENTAL_PERIODS
+const colors = COLORS
+const sizes = SIZES
+const deliveryMethods = DELIVERY_METHODS
+
+const selectedPeriod = computed({
+  get: () => selection.period,
+  set: (val) => setPeriod(val)
 })
 
-const calculatedDeposit = computed(() => {
-  const baseDeposit = props.baseDeposit
-  const sizeAdjustment = sizePriceMultiplier.value
-  return Math.max(500, baseDeposit + sizeAdjustment)
+const selectedColor = computed({
+  get: () => selection.color,
+  set: (val) => setColor(val)
 })
 
-const rentalSubtotal = computed(() => {
-  return currentPeriodPrice.value * selectedPeriod.value
+const selectedSize = computed({
+  get: () => selection.size,
+  set: (val) => setSize(val)
 })
 
-const currentDeliveryFee = computed(() => {
-  const method = deliveryMethods.find(m => m.value === selectedDelivery.value)
-  return method ? method.fee : 0
+const selectedDelivery = computed({
+  get: () => selection.delivery,
+  set: (val) => setDelivery(val)
 })
-
-const totalAmount = computed(() => {
-  return rentalSubtotal.value + calculatedDeposit.value + currentDeliveryFee.value
-})
-
-const selectPeriod = (months) => {
-  selectedPeriod.value = months
-  updateSelection()
-}
-
-const selectColor = (color) => {
-  selectedColor.value = color
-  updateSelection()
-}
-
-const selectSize = (size) => {
-  selectedSize.value = size
-  updateSelection()
-}
-
-const selectDelivery = (delivery) => {
-  selectedDelivery.value = delivery
-  updateSelection()
-}
 
 const getColorName = (colorValue) => {
   const color = colors.find(c => c.value === colorValue)
   return color ? color.name : ''
 }
 
-const updateSelection = () => {
-  const selection = {
-    period: selectedPeriod.value,
-    color: selectedColor.value,
-    colorName: getColorName(selectedColor.value),
-    size: selectedSize.value,
-    delivery: selectedDelivery.value,
-    monthlyPrice: currentPeriodPrice.value,
-    deposit: calculatedDeposit.value,
-    deliveryFee: currentDeliveryFee.value,
-    totalAmount: totalAmount.value,
-    rentalSubtotal: rentalSubtotal.value
-  }
-  emit('update:selection', selection)
+const selectPeriod = (months) => {
+  setPeriod(months)
 }
 
-watch([selectedPeriod, selectedColor, selectedSize, selectedDelivery], () => {
-  updateSelection()
-}, { immediate: true })
+const selectColor = (color) => {
+  setColor(color)
+}
+
+const selectSize = (size) => {
+  setSize(size)
+}
+
+const selectDelivery = (delivery) => {
+  setDelivery(delivery)
+}
+
+const validation = computed(() => rentalSelection.validate())
+
+const emitValidation = () => {
+  emit('validation-change', validation.value)
+}
+
+onMounted(() => {
+  emitValidation()
+})
+
+watch(validation, () => {
+  emitValidation()
+})
 </script>
 
 <style scoped>

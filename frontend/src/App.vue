@@ -28,30 +28,30 @@
               <div class="rental-price">
                 <span class="price-label">月租</span>
                 <div class="price-display">
-                  <span class="price-value">¥{{ productSelection.monthlyPrice }}</span>
+                  <span class="price-value">¥{{ rentalSelection.monthlyPrice.value }}</span>
                   <span class="price-unit">/月起</span>
                 </div>
               </div>
               <div class="deposit">
                 <span class="deposit-label">押金</span>
-                <span class="deposit-value">¥{{ productSelection.deposit }}</span>
+                <span class="deposit-value">¥{{ rentalSelection.deposit.value }}</span>
               </div>
               <div class="total-display">
                 <span class="total-label">应付总额</span>
-                <span class="total-value">¥{{ productSelection.totalAmount }}</span>
+                <span class="total-value">¥{{ rentalSelection.totalAmount.value }}</span>
               </div>
             </div>
 
             <SpecificationSelector
               :base-price="199"
               :base-deposit="800"
-              @update:selection="handleSelectionUpdate"
+              @validation-change="handleValidationChange"
             />
 
             <div class="action-buttons">
               <button class="btn-primary" @click="handleRent">
                 立即租赁
-                <span class="btn-price">¥{{ productSelection.totalAmount }}</span>
+                <span class="btn-price">¥{{ rentalSelection.totalAmount.value }}</span>
               </button>
               <button class="btn-secondary">加入收藏</button>
             </div>
@@ -67,9 +67,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, provide, computed } from 'vue'
 import MediaGallery from './components/MediaGallery.vue'
 import SpecificationSelector from './components/SpecificationSelector.vue'
+import { useRentalSelection } from './composables/useRentalSelection'
 
 const productId = ref('product-001')
 
@@ -100,18 +101,14 @@ const notification = reactive({
   type: 'success'
 })
 
-const productSelection = ref({
-  period: 6,
-  color: 'white',
-  colorName: '米白色',
-  size: 'medium',
-  delivery: 'delivery',
-  monthlyPrice: 189,
-  deposit: 800,
-  deliveryFee: 0,
-  totalAmount: 1934,
-  rentalSubtotal: 1134
+const rentalSelection = useRentalSelection({
+  basePrice: 199,
+  baseDeposit: 800
 })
+
+provide('rentalSelection', rentalSelection)
+
+const { selectionSummary, validate, undo, canUndo } = rentalSelection
 
 const showNotification = (message, type = 'success') => {
   notification.message = message
@@ -130,12 +127,22 @@ const handleMediaError = ({ message }) => {
   showNotification(message, 'error')
 }
 
-const handleSelectionUpdate = (selection) => {
-  Object.assign(productSelection.value, selection)
+const handleValidationChange = ({ valid, errors }) => {
+  if (!valid && errors.length > 0) {
+    console.warn('Validation errors:', errors)
+  }
 }
 
 const handleRent = () => {
-  const message = `您选择了：${productSelection.value.period}个月租期，${productSelection.value.colorName}色，${productSelection.value.size === 'small' ? '小款' : productSelection.value.size === 'medium' ? '中款' : '大款'}，应付总额¥${productSelection.value.totalAmount}`
+  const validation = validate()
+
+  if (!validation.valid) {
+    showNotification(validation.errors[0], 'error')
+    return
+  }
+
+  const summary = selectionSummary.value
+  const message = `您选择了：${summary.periodLabel}租期，${summary.colorName}，${summary.sizeName}，${summary.deliveryName}，应付总额¥${summary.totalAmount}`
   showNotification(message, 'success')
 }
 </script>
