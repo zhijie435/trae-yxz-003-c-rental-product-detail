@@ -17,13 +17,17 @@
         </div>
 
         <div class="info-column">
-          <div class="product-info">
-            <div class="product-badge">租赁商品</div>
-            <h2 class="product-name">设计师款北欧风沙发</h2>
-            <p class="product-desc">
-              简约现代设计，优质棉麻面料，高密度海绵填充，舒适耐用。适合客厅、书房等多种场景。
-            </p>
-            
+          <ProductCoreInfo
+            :product-name="productCoreInfo.productName"
+            :brand="productCoreInfo.brand"
+            :model="productCoreInfo.model"
+            :sales-count="productCoreInfo.salesCount"
+            :rating="productCoreInfo.rating"
+            :reviews="productCoreInfo.reviews"
+            :display-limit="2"
+          />
+
+          <div class="product-actions">
             <div class="price-section">
               <div class="rental-price">
                 <span class="price-label">月租</span>
@@ -70,6 +74,7 @@
 import { ref, reactive, provide, computed } from 'vue'
 import MediaGallery from './components/MediaGallery.vue'
 import SpecificationSelector from './components/SpecificationSelector.vue'
+import ProductCoreInfo from './components/ProductCoreInfo.vue'
 import { useRentalSelection } from './composables/useRentalSelection'
 
 const productId = ref('product-001')
@@ -94,6 +99,51 @@ const demoMedia = ref([
     alt: '沙发细节展示'
   }
 ])
+
+const productCoreInfo = ref({
+  productName: '设计师款北欧风沙发',
+  brand: '宜家经典',
+  model: 'KIVIK 奇维系列',
+  salesCount: '2,847',
+  rating: '98.5%',
+  reviews: [
+    {
+      id: 'review-1',
+      reviewerName: '张女士',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80',
+      rating: 5,
+      date: '2024-01-15',
+      tags: ['品质优良', '外观时尚'],
+      content: '沙发的做工非常精致，面料手感很好，坐上去非常舒适。配送师傅服务态度也很好，整个购买体验非常愉快。强烈推荐给想要提升家居品质的朋友们！',
+      images: [
+        'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&q=80',
+        'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=300&q=80'
+      ]
+    },
+    {
+      id: 'review-2',
+      reviewerName: '李先生',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80',
+      rating: 5,
+      date: '2024-01-10',
+      tags: ['租赁体验好', '性价比高'],
+      content: '第一次尝试家具租赁，整体感觉非常棒！租期灵活，押金合理，而且沙发的品质超出预期。下次还会续租或者尝试其他家具。',
+      images: [
+        'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=300&q=80'
+      ]
+    },
+    {
+      id: 'review-3',
+      reviewerName: '王小姐',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80',
+      rating: 4,
+      date: '2024-01-05',
+      tags: ['服务贴心'],
+      content: '客服很专业，回答问题很耐心。沙发收到后和图片一致，没有色差。唯一的建议是希望能增加更多颜色选择。',
+      images: []
+    }
+  ]
+})
 
 const notification = reactive({
   show: false,
@@ -182,36 +232,8 @@ const handleRent = () => {
   }
 }
 
-.product-info {
+.product-actions {
   padding: 32px 0;
-}
-
-.product-badge {
-  display: inline-block;
-  padding: 6px 16px;
-  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: 20px;
-  margin-bottom: 16px;
-  letter-spacing: 0.5px;
-}
-
-.product-name {
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: 16px;
-  line-height: 1.3;
-}
-
-.product-desc {
-  font-size: 15px;
-  color: var(--color-text-muted);
-  line-height: 1.8;
-  margin-bottom: 32px;
 }
 
 .price-section {
@@ -398,10 +420,6 @@ const handleRent = () => {
 @media (max-width: 768px) {
   .page-title {
     font-size: 28px;
-  }
-
-  .product-name {
-    font-size: 24px;
   }
 
   .price-section {
