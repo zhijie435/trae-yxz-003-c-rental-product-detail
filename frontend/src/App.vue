@@ -27,6 +27,8 @@
             :display-limit="2"
           />
 
+          <ServicePromise />
+
           <div class="product-actions">
             <div class="price-section">
               <div class="rental-price">
@@ -75,6 +77,7 @@ import { ref, reactive, provide, computed } from 'vue'
 import MediaGallery from './components/MediaGallery.vue'
 import SpecificationSelector from './components/SpecificationSelector.vue'
 import ProductCoreInfo from './components/ProductCoreInfo.vue'
+import ServicePromise from './components/ServicePromise.vue'
 import { useRentalSelection } from './composables/useRentalSelection'
 
 const productId = ref('product-001')
