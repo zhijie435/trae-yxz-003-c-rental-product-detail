@@ -19,9 +19,28 @@ export function useReviewFilter(initialReviews = []) {
   const reviews = ref([...initialReviews])
   const filters = reactive({
     rating: null,
-    hasImages: false,
+    hasMedia: false,
     keyword: ''
   })
+
+  const isVideoMedia = (media) => {
+    return typeof media === 'object' && media !== null && media.type === 'video'
+  }
+
+  const hasImagesOrVideos = (review) => {
+    if (!review.images || !Array.isArray(review.images) || review.images.length === 0) {
+      return false
+    }
+    return review.images.some(media => {
+      if (typeof media === 'string') {
+        return true
+      }
+      if (typeof media === 'object' && media !== null) {
+        return isVideoMedia(media) || (media.url && !isVideoMedia(media))
+      }
+      return false
+    })
+  }
 
   const sortBy = ref('newest')
   const currentPage = ref(1)
@@ -34,8 +53,8 @@ export function useReviewFilter(initialReviews = []) {
       result = result.filter(r => r.rating === filters.rating)
     }
 
-    if (filters.hasImages) {
-      result = result.filter(r => r.images && r.images.length > 0)
+    if (filters.hasMedia) {
+      result = result.filter(r => hasImagesOrVideos(r))
     }
 
     if (filters.keyword.trim()) {
@@ -105,8 +124,8 @@ export function useReviewFilter(initialReviews = []) {
     currentPage.value = 1
   }
 
-  const setHasImagesFilter = (value) => {
-    filters.hasImages = value
+  const setHasMediaFilter = (value) => {
+    filters.hasMedia = value
     currentPage.value = 1
   }
 
@@ -139,7 +158,7 @@ export function useReviewFilter(initialReviews = []) {
 
   const resetFilters = () => {
     filters.rating = null
-    filters.hasImages = false
+    filters.hasMedia = false
     filters.keyword = ''
     currentPage.value = 1
   }
@@ -179,8 +198,8 @@ export function useReviewFilter(initialReviews = []) {
       parts.push(`${filters.rating}星评价`)
     }
 
-    if (filters.hasImages) {
-      parts.push('有图评价')
+    if (filters.hasMedia) {
+      parts.push('有图/视频评价')
     }
 
     if (filters.keyword.trim()) {
@@ -205,7 +224,7 @@ export function useReviewFilter(initialReviews = []) {
     totalReviews,
     filteredCount,
     setRatingFilter,
-    setHasImagesFilter,
+    setHasMediaFilter,
     setKeyword,
     setSortBy,
     setPage,

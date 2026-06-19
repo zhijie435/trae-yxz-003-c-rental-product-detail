@@ -65,8 +65,8 @@
 
         <button
           class="filter-toggle"
-          :class="{ active: filters.hasImages }"
-          @click="toggleImagesFilter"
+          :class="{ active: filters.hasMedia }"
+          @click="toggleMediaFilter"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -350,7 +350,7 @@ const {
   averageRating,
   totalReviews,
   setRatingFilter,
-  setHasImagesFilter,
+  setHasMediaFilter,
   setKeyword,
   setSortBy,
   setPage,
@@ -376,7 +376,7 @@ const lightbox = reactive({
 
 const hasActiveFilters = computed(() => {
   return filters.rating !== null ||
-         filters.hasImages ||
+         filters.hasMedia ||
          filters.keyword.trim() !== ''
 })
 
@@ -429,8 +429,8 @@ const toggleRatingFilter = (rating) => {
   }
 }
 
-const toggleImagesFilter = () => {
-  setHasImagesFilter(!filters.hasImages)
+const toggleMediaFilter = () => {
+  setHasMediaFilter(!filters.hasMedia)
 }
 
 const handleSearch = () => {

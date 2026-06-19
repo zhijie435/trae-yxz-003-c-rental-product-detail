@@ -46,6 +46,29 @@ const createMockReviews = () => [
     createTime: '2024-01-11T10:00:00Z',
     images: [],
     helpfulCount: 1
+  },
+  {
+    id: 'review-6',
+    rating: 5,
+    content: '视频展示很清晰',
+    userName: '孙八',
+    createTime: '2024-01-10T10:00:00Z',
+    images: [
+      { type: 'video', url: 'video1.mp4', thumbnail: 'thumb1.jpg' },
+      'img4.jpg'
+    ],
+    helpfulCount: 15
+  },
+  {
+    id: 'review-7',
+    rating: 4,
+    content: '只有视频没有图片',
+    userName: '周九',
+    createTime: '2024-01-09T10:00:00Z',
+    images: [
+      { type: 'video', url: 'video2.mp4', thumbnail: 'thumb2.jpg' }
+    ],
+    helpfulCount: 8
   }
 ]
 
@@ -58,12 +81,12 @@ describe('评价筛选功能测试', () => {
     })
 
     it('应该正确初始化评价列表', () => {
-      expect(reviewFilter.reviews.value.length).toBe(5)
+      expect(reviewFilter.reviews.value.length).toBe(7)
     })
 
     it('应该有默认的筛选条件', () => {
       expect(reviewFilter.filters.rating).toBe(null)
-      expect(reviewFilter.filters.hasImages).toBe(false)
+      expect(reviewFilter.filters.hasMedia).toBe(false)
       expect(reviewFilter.filters.keyword).toBe('')
     })
 
@@ -84,13 +107,13 @@ describe('评价筛选功能测试', () => {
 
     it('应该能够筛选5星评价', () => {
       reviewFilter.setRatingFilter(5)
-      expect(reviewFilter.filteredReviews.value.length).toBe(2)
+      expect(reviewFilter.filteredReviews.value.length).toBe(3)
       expect(reviewFilter.filteredReviews.value.every(r => r.rating === 5)).toBe(true)
     })
 
     it('应该能够筛选4星评价', () => {
       reviewFilter.setRatingFilter(4)
-      expect(reviewFilter.filteredReviews.value.length).toBe(1)
+      expect(reviewFilter.filteredReviews.value.length).toBe(2)
       expect(reviewFilter.filteredReviews.value[0].rating).toBe(4)
     })
 
@@ -118,25 +141,33 @@ describe('评价筛选功能测试', () => {
     })
   })
 
-  describe('按是否有图片筛选', () => {
+  describe('按是否有图片或视频筛选', () => {
     beforeEach(() => {
       reviewFilter = useReviewFilter(createMockReviews())
     })
 
-    it('应该能够筛选有图片的评价', () => {
-      reviewFilter.setHasImagesFilter(true)
-      expect(reviewFilter.filteredReviews.value.length).toBe(2)
+    it('应该能够筛选有图片或视频的评价', () => {
+      reviewFilter.setHasMediaFilter(true)
+      expect(reviewFilter.filteredReviews.value.length).toBe(4)
       expect(reviewFilter.filteredReviews.value.every(r => r.images && r.images.length > 0)).toBe(true)
     })
 
-    it('应该能够筛选没有图片的评价', () => {
-      reviewFilter.setHasImagesFilter(false)
-      expect(reviewFilter.filteredReviews.value.length).toBe(5)
+    it('应该能够筛选没有图片或视频的评价', () => {
+      reviewFilter.setHasMediaFilter(false)
+      expect(reviewFilter.filteredReviews.value.length).toBe(7)
+    })
+
+    it('应该能够筛选有视频的评价', () => {
+      reviewFilter.setHasMediaFilter(true)
+      const hasVideo = reviewFilter.filteredReviews.value.some(r =>
+        r.images && r.images.some(img => typeof img === 'object' && img.type === 'video')
+      )
+      expect(hasVideo).toBe(true)
     })
 
     it('筛选后应该重置到第一页', () => {
       reviewFilter.setPage(2)
-      reviewFilter.setHasImagesFilter(true)
+      reviewFilter.setHasMediaFilter(true)
       expect(reviewFilter.currentPage.value).toBe(1)
     })
   })
@@ -172,7 +203,7 @@ describe('评价筛选功能测试', () => {
       expect(reviewFilter.filteredReviews.value.length).toBeGreaterThan(0)
 
       reviewFilter.setKeyword('')
-      expect(reviewFilter.filteredReviews.value.length).toBe(5)
+      expect(reviewFilter.filteredReviews.value.length).toBe(7)
     })
 
     it('搜索后应该重置到第一页', () => {
@@ -187,13 +218,13 @@ describe('评价筛选功能测试', () => {
       reviewFilter = useReviewFilter(createMockReviews())
     })
 
-    it('应该能够组合评分和图片筛选', () => {
+    it('应该能够组合评分和图片/视频筛选', () => {
       reviewFilter.setRatingFilter(5)
-      reviewFilter.setHasImagesFilter(true)
+      reviewFilter.setHasMediaFilter(true)
 
-      expect(reviewFilter.filteredReviews.value.length).toBe(1)
-      expect(reviewFilter.filteredReviews.value[0].rating).toBe(5)
-      expect(reviewFilter.filteredReviews.value[0].images.length).toBeGreaterThan(0)
+      expect(reviewFilter.filteredReviews.value.length).toBe(2)
+      expect(reviewFilter.filteredReviews.value.every(r => r.rating === 5)).toBe(true)
+      expect(reviewFilter.filteredReviews.value.every(r => r.images && r.images.length > 0)).toBe(true)
     })
 
     it('应该能够组合评分和关键词筛选', () => {
@@ -206,7 +237,7 @@ describe('评价筛选功能测试', () => {
 
     it('应该能够组合所有筛选条件', () => {
       reviewFilter.setRatingFilter(5)
-      reviewFilter.setHasImagesFilter(true)
+      reviewFilter.setHasMediaFilter(true)
       reviewFilter.setKeyword('好')
 
       expect(reviewFilter.filteredReviews.value.length).toBe(1)
@@ -264,7 +295,7 @@ describe('评价筛选功能测试', () => {
     it('应该能够设置自定义页面大小', () => {
       reviewFilter = useReviewFilter(createMockReviews())
       reviewFilter.setPageSize(2)
-      expect(reviewFilter.totalPages.value).toBe(3)
+      expect(reviewFilter.totalPages.value).toBe(4)
     })
 
     it('应该能够下一页', () => {
@@ -280,9 +311,9 @@ describe('评价筛选功能测试', () => {
       reviewFilter = useReviewFilter(createMockReviews())
       reviewFilter.setPageSize(2)
 
-      reviewFilter.setPage(3)
+      reviewFilter.setPage(4)
       reviewFilter.nextPage()
-      expect(reviewFilter.currentPage.value).toBe(3)
+      expect(reviewFilter.currentPage.value).toBe(4)
     })
 
     it('应该能够上一页', () => {
@@ -314,7 +345,11 @@ describe('评价筛选功能测试', () => {
 
       reviewFilter.nextPage()
       const thirdPageReviews = reviewFilter.paginatedReviews.value
-      expect(thirdPageReviews.length).toBe(1)
+      expect(thirdPageReviews.length).toBe(2)
+
+      reviewFilter.nextPage()
+      const fourthPageReviews = reviewFilter.paginatedReviews.value
+      expect(fourthPageReviews.length).toBe(1)
     })
 
     it('应该能够跳转到指定页', () => {
@@ -348,8 +383,8 @@ describe('评价筛选功能测试', () => {
     it('应该正确计算评分分布', () => {
       const distribution = reviewFilter.ratingDistribution.value
 
-      expect(distribution[5]).toBe(2)
-      expect(distribution[4]).toBe(1)
+      expect(distribution[5]).toBe(3)
+      expect(distribution[4]).toBe(2)
       expect(distribution[3]).toBe(1)
       expect(distribution[2]).toBe(1)
       expect(distribution[1]).toBe(0)
@@ -357,16 +392,16 @@ describe('评价筛选功能测试', () => {
 
     it('应该正确计算平均评分', () => {
       const average = reviewFilter.averageRating.value
-      expect(parseFloat(average)).toBe(3.8)
+      expect(parseFloat(average)).toBeCloseTo(4.0, 1)
     })
 
     it('应该正确计算总评价数', () => {
-      expect(reviewFilter.totalReviews.value).toBe(5)
+      expect(reviewFilter.totalReviews.value).toBe(7)
     })
 
     it('应该正确计算筛选后的评价数', () => {
       reviewFilter.setRatingFilter(5)
-      expect(reviewFilter.filteredCount.value).toBe(2)
+      expect(reviewFilter.filteredCount.value).toBe(3)
     })
   })
 
@@ -377,14 +412,14 @@ describe('评价筛选功能测试', () => {
 
     it('应该能够重置所有筛选条件', () => {
       reviewFilter.setRatingFilter(5)
-      reviewFilter.setHasImagesFilter(true)
+      reviewFilter.setHasMediaFilter(true)
       reviewFilter.setKeyword('质量')
       reviewFilter.setPage(2)
 
       reviewFilter.resetFilters()
 
       expect(reviewFilter.filters.rating).toBe(null)
-      expect(reviewFilter.filters.hasImages).toBe(false)
+      expect(reviewFilter.filters.hasMedia).toBe(false)
       expect(reviewFilter.filters.keyword).toBe('')
       expect(reviewFilter.currentPage.value).toBe(1)
     })
@@ -462,9 +497,9 @@ describe('评价筛选功能测试', () => {
       expect(reviewFilter.getFilterSummary.value).toContain('5星评价')
     })
 
-    it('有图片筛选时应该包含图片信息', () => {
-      reviewFilter.setHasImagesFilter(true)
-      expect(reviewFilter.getFilterSummary.value).toContain('有图评价')
+    it('有图片/视频筛选时应该包含媒体信息', () => {
+      reviewFilter.setHasMediaFilter(true)
+      expect(reviewFilter.getFilterSummary.value).toContain('有图/视频评价')
     })
 
     it('有关键词筛选时应该包含关键词', () => {
@@ -474,12 +509,12 @@ describe('评价筛选功能测试', () => {
 
     it('多个筛选条件应该正确组合', () => {
       reviewFilter.setRatingFilter(5)
-      reviewFilter.setHasImagesFilter(true)
+      reviewFilter.setHasMediaFilter(true)
       reviewFilter.setKeyword('好')
 
       const summary = reviewFilter.getFilterSummary.value
       expect(summary).toContain('5星评价')
-      expect(summary).toContain('有图评价')
+      expect(summary).toContain('有图/视频评价')
       expect(summary).toContain('"好"')
     })
   })
